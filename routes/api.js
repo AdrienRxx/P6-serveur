@@ -1,7 +1,7 @@
-const express = require('express')
+const express = require("express");
 
-const routes = express()
+const routes = express();
 
-routes.use('/member', require('./user.js'))
+routes.use("/auth", require("./auth.js"));
 
-module.exports = routes
+module.exports = routes;

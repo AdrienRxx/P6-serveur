@@ -1,14 +1,12 @@
-const env = require("./manager/env.js");
+const { PORT } = require("./manager/env.js");
 const express = require("express");
-console.log(env);
 const app = express();
-const port = 3000;
-
+if (!PORT) throw new Error("PORT must be set in .env");
 app.use(require("./middlewares/mongoReady.js"));
 app.use(require("./middlewares/logger.js"));
 app.use("/api", require("./routes/api.js"));
-app.listen(port, () => {
-  console.log(`server is listening on http://locahost:${port}`);
+app.listen(PORT, () => {
+  console.log(`server is listening on http://locahost:${PORT}`);
 });
 
 require("./manager/mongodb.js");
