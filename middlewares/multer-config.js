@@ -1,4 +1,9 @@
 const multer = require("multer");
+const fs = require("fs");
+
+fs.promises
+  .mkdir("images")
+  .catch(() => console.log("Image folder already exist"));
 
 const MIME_TYPES = {
   "image/jpg": "jpg",
@@ -7,9 +12,7 @@ const MIME_TYPES = {
 };
 
 const storage = multer.diskStorage({
-  destination: (req, file, callback) => {
-    callback(null, "images");
-  },
+  destination: (req, file, callback) => callback(null, "images"),
   filename: (req, file, callback) => {
     const name = file.originalname.split(" ").join("_");
     const extension = MIME_TYPES[file.mimetype];

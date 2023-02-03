@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const { sign } = require("../manager/jwt.js");
-const { User } = require("../models/user_model.js");
+const User = require("../models/user_model.js");
 
 async function signup(req, res) {
   const { email, password } = req.body;
