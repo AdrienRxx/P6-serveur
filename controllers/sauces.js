@@ -86,10 +86,71 @@ async function getAllSauces(req, res, next) {
     .catch((error) => res.status(400).json({ error }));
 }
 
+async function likeDislikeSauce(req, res, next) {
+  let like = req.body.like;
+  let userId = req.body.userId;
+  let sauceId = req.params.id;
+
+  //Une expression à comparer avec chacune des case
+  switch (like) {
+    //Les instructions à exécuter lorsque l'expression correspond au cas présenté pour cette case
+    case 1:
+      Sauce.updateOne(
+        { _id: sauceId },
+        { $push: { usersLiked: userId }, $inc: { likes: +1 } }
+      )
+        .then(() => res.status(200).json({ message: `J'aime` }))
+        .catch((error) => res.status(400).json({ error }));
+
+      break;
+
+    case 0:
+      //Les instructions à exécuter lorsque l'expression correspond au cas présenté pour cette case
+      Sauce.findOne({ _id: sauceId })
+        .then((sauce) => {
+          if (sauce.usersLiked.includes(userId)) {
+            Sauce.updateOne(
+              { _id: sauceId },
+              { $pull: { usersLiked: userId }, $inc: { likes: -1 } }
+            )
+              .then(() => res.status(200).json({ message: `Neutre` }))
+              .catch((error) => res.status(400).json({ error }));
+          }
+          if (sauce.usersDisliked.includes(userId)) {
+            Sauce.updateOne(
+              { _id: sauceId },
+              { $pull: { usersDisliked: userId }, $inc: { dislikes: -1 } }
+            )
+              .then(() => res.status(200).json({ message: `Neutre` }))
+              .catch((error) => res.status(400).json({ error }));
+          }
+        })
+        .catch((error) => res.status(404).json({ error }));
+      break;
+
+    case -1:
+      //Les instructions à exécuter lorsque l'expression correspond au cas présenté pour cette case
+      Sauce.updateOne(
+        { _id: sauceId },
+        { $push: { usersDisliked: userId }, $inc: { dislikes: +1 } }
+      )
+        .then(() => {
+          res.status(200).json({ message: `Je n'aime pas` });
+        })
+        .catch((error) => res.status(400).json({ error }));
+      break;
+
+    default:
+      //Les instructions à exécuter si l'expression ne correspond à aucun cas de figure précédemment décrit.
+      console.log(error);
+  }
+}
+
 module.exports = {
   createSauces,
   modifySauces,
   deleteSauces,
   getOneSauces,
   getAllSauces,
+  likeDislikeSauce,
 };
