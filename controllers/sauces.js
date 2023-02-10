@@ -1,8 +1,9 @@
-const sauces = require("../models/models_sauce.js");
+const Sauces = require("../models/models_sauce.js");
+
 const fs = require("fs");
 
 async function createSauces(req, res) {
-  const saucesObject = JSON.parse(req.body.sauces);
+  const saucesObject = JSON.parse(req.body.sauce);
   delete saucesObject._id;
   delete saucesObject._userId;
   const sauces = new Sauces({
@@ -23,9 +24,10 @@ async function createSauces(req, res) {
 async function modifySauces(req, res, next) {
   let saucesObject;
 
+  console.log(req.file);
   if (req.file)
     saucesObject = {
-      ...JSON.parse(req.body.thing),
+      ...JSON.parse(req.body.sauce),
       imageUrl: `${req.protocol}://${req.get("host")}/images/${
         req.file.filename
       }`,
@@ -73,15 +75,13 @@ async function deleteSauces(req, res, next) {
 }
 
 async function getOneSauces(req, res, next) {
-  sauces
-    .findOne({ _id: req.params.id })
+  Sauces.findOne({ _id: req.params.id })
     .then((thing) => res.status(200).json(thing))
     .catch((error) => res.status(404).json({ error }));
 }
 
 async function getAllSauces(req, res, next) {
-  sauces
-    .find()
+  Sauces.find()
     .then((things) => res.status(200).json(things))
     .catch((error) => res.status(400).json({ error }));
 }
@@ -95,49 +95,45 @@ async function likeDislikeSauce(req, res, next) {
   switch (like) {
     //Les instructions à exécuter lorsque l'expression correspond au cas présenté pour cette case
     case 1:
-      Sauce.updateOne(
+      await Sauces.updateOne(
         { _id: sauceId },
         { $push: { usersLiked: userId }, $inc: { likes: +1 } }
-      )
-        .then(() => res.status(200).json({ message: `J'aime` }))
-        .catch((error) => res.status(400).json({ error }));
+      ).catch((error) => res.status(400).json({ error }));
+      res.status(200).json({ message: `J'aime` });
 
       break;
 
     case 0:
       //Les instructions à exécuter lorsque l'expression correspond au cas présenté pour cette case
-      Sauce.findOne({ _id: sauceId })
-        .then((sauce) => {
-          if (sauce.usersLiked.includes(userId)) {
-            Sauce.updateOne(
-              { _id: sauceId },
-              { $pull: { usersLiked: userId }, $inc: { likes: -1 } }
-            )
-              .then(() => res.status(200).json({ message: `Neutre` }))
-              .catch((error) => res.status(400).json({ error }));
-          }
-          if (sauce.usersDisliked.includes(userId)) {
-            Sauce.updateOne(
-              { _id: sauceId },
-              { $pull: { usersDisliked: userId }, $inc: { dislikes: -1 } }
-            )
-              .then(() => res.status(200).json({ message: `Neutre` }))
-              .catch((error) => res.status(400).json({ error }));
-          }
-        })
-        .catch((error) => res.status(404).json({ error }));
+      const sauce = await Sauces.findOne({ _id: sauceId }).catch((error) =>
+        res.status(404).json({ error })
+      );
+
+      if (sauce.usersLiked.includes(userId)) {
+        await Sauces.updateOne(
+          { _id: sauceId },
+          { $pull: { usersLiked: userId }, $inc: { likes: -1 } }
+        ).catch((error) => res.status(400).json({ error }));
+        res.status(200).json({ message: `Neutre` });
+      }
+      if (sauce.usersDisliked.includes(userId)) {
+        await Sauces.updateOne(
+          { _id: sauceId },
+          { $pull: { usersDisliked: userId }, $inc: { dislikes: -1 } }
+        ).catch((error) => res.status(400).json({ error }));
+        res.status(200).json({ message: `Neutre` });
+      }
+
       break;
 
     case -1:
       //Les instructions à exécuter lorsque l'expression correspond au cas présenté pour cette case
-      Sauce.updateOne(
+      await Sauces.updateOne(
         { _id: sauceId },
         { $push: { usersDisliked: userId }, $inc: { dislikes: +1 } }
-      )
-        .then(() => {
-          res.status(200).json({ message: `Je n'aime pas` });
-        })
-        .catch((error) => res.status(400).json({ error }));
+      ).catch((error) => res.status(400).json({ error }));
+      res.status(200).json({ message: `Je n'aime pas` });
+
       break;
 
     default:
